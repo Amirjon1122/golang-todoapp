@@ -2,6 +2,7 @@ package main
 
 import (
  "context"
+ "encoding/json"
  "fmt"
  "net/http"
 
@@ -9,7 +10,7 @@ import (
 )
 
 
-// Получение всех задач
+// Получить все задачи
 func GetTasks(db *pgxpool.Pool) http.HandlerFunc {
 
  return func(w http.ResponseWriter, r *http.Request) {
@@ -20,113 +21,161 @@ func GetTasks(db *pgxpool.Pool) http.HandlerFunc {
   )
 
   if err != nil {
-   http.Error(w, err.Error(), http.StatusInternalServerError)
+   http.Error(w, err.Error(), 500)
    return
   }
 
   defer rows.Close()
 
 
+  var tasks []Task
+
+
   for rows.Next() {
 
-   var id int
-   var title string
-   var description string
-   var completed bool
+   var task Task
 
 
    err := rows.Scan(
-    &id,
-    &title,
-    &description,
-    &completed,
+    &task.ID,
+    &task.Title,
+    &task.Description,
+    &task.Completed,
    )
 
+
    if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
+    http.Error(w, err.Error(), 500)
     return
    }
 
 
-   fmt.Fprintf(
-    w,
-    "%d | %s | %s | %t<br>",
-    id,
-    title,
-    description,
-    completed,
-   )
+   tasks = append(tasks, task)
   }
+
+
+  w.Header().Set(
+   "Content-Type",
+   "application/json",
+  )
+
+
+  json.NewEncoder(w).Encode(tasks)
  }
 }
 
 
 
-// Создание задачи
+// Создать задачу через JSON
 func CreateTask(db *pgxpool.Pool) http.HandlerFunc {
 
  return func(w http.ResponseWriter, r *http.Request) {
 
 
-  title := r.FormValue("title")
-  description := r.FormValue("description")
+  var task Task
 
 
-  _, err := db.Exec(
-   context.Background(),
-   "INSERT INTO tasks(title, description) VALUES($1, $2)",
-   title,
-   description,
-  )
+  err := json.NewDecoder(r.Body).Decode(&task)
 
 
   if err != nil {
-   http.Error(w, err.Error(), http.StatusInternalServerError)
+
+   http.Error(w, err.Error(), 400)
+
    return
   }
 
 
-  fmt.Fprintln(w, "Задача создана")
+
+  _, err = db.Exec(
+   context.Background(),
+   "INSERT INTO tasks(title, description) VALUES($1, $2)",
+   task.Title,
+   task.Description,
+  )
+
+
+
+  if err != nil {
+
+   http.Error(w, err.Error(), 500)
+
+   return
+  }
+
+
+
+  w.Header().Set(
+   "Content-Type",
+   "application/json",
+  )
+
+
+  json.NewEncoder(w).Encode(task)
+
  }
 }
 
 
 
-// Изменение задачи
+// Изменить задачу
 func UpdateTask(db *pgxpool.Pool) http.HandlerFunc {
 
  return func(w http.ResponseWriter, r *http.Request) {
 
 
   id := r.FormValue("id")
-  title := r.FormValue("title")
-  description := r.FormValue("description")
-  completed := r.FormValue("completed")
 
 
-  _, err := db.Exec(
-   context.Background(),
-   "UPDATE tasks SET title=$1, description=$2, completed=$3 WHERE id=$4",
-   title,
-   description,
-   completed,
-   id,
-  )
+  var task Task
+
+
+  err := json.NewDecoder(r.Body).Decode(&task)
 
 
   if err != nil {
-   http.Error(w, err.Error(), http.StatusInternalServerError)
+
+   http.Error(w, err.Error(), 400)
+
    return
   }
 
 
-  fmt.Fprintln(w, "Задача обновлена")
+
+  _, err = db.Exec(
+   context.Background(),
+   "UPDATE tasks SET title=$1, description=$2, completed=$3 WHERE id=$4",
+   task.Title,
+   task.Description,
+   task.Completed,
+   id,
+  )
+
+
+
+  if err != nil {
+
+   http.Error(w, err.Error(), 500)
+
+   return
+  }
+
+
+
+  w.Header().Set(
+   "Content-Type",
+   "application/json",
+  )
+
+
+  json.NewEncoder(w).Encode(task)
+
  }
 }
 
 
 
-// Удаление задачи
+// Удалить задачу
 func DeleteTask(db *pgxpool.Pool) http.HandlerFunc {
 
  return func(w http.ResponseWriter, r *http.Request) {
@@ -142,12 +191,17 @@ func DeleteTask(db *pgxpool.Pool) http.HandlerFunc {
   )
 
 
+
   if err != nil {
-   http.Error(w, err.Error(), http.StatusInternalServerError)
+
+   http.Error(w, err.Error(), 500)
+
    return
   }
 
 
+
   fmt.Fprintln(w, "Задача удалена")
+
  }
 }
