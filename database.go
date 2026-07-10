@@ -1,32 +1,37 @@
 package main
 
 import (
- "context"
+	"context"
+	"os"
 
- "github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
-
 
 func ConnectDB() (*pgxpool.Pool, error) {
 
- db, err := pgxpool.New(
-  context.Background(),
-  "postgres://postgres:postgres12345@localhost:5432/todo?sslmode=disable",
- )
+	err := godotenv.Load()
 
+	if err != nil {
+		return nil, err
+	}
 
- if err != nil {
-  return nil, err
- }
+	dbURL := os.Getenv("DATABASE_URL")
 
+	db, err := pgxpool.New(
+		context.Background(),
+		dbURL,
+	)
 
- err = db.Ping(context.Background())
+	if err != nil {
+		return nil, err
+	}
 
+	err = db.Ping(context.Background())
 
- if err != nil {
-  return nil, err
- }
+	if err != nil {
+		return nil, err
+	}
 
-
- return db, nil
+	return db, nil
 }
