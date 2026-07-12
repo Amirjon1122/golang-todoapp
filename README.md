@@ -1,80 +1,77 @@
-# Todo List API
-
+Todo List API
 REST API для управления задачами (Todo List), написанный на Go с использованием PostgreSQL.
+Технологии
+Go
+PostgreSQL
+pgx
+net/http
 
-## Технологии
 
-- Go
-- PostgreSQL
-- pgx
-- net/http
+⸻
 
----
 
-# Установка и запуск
-
-## 1. Клонировать проект
+Установка и запуск
+1. Клонировать проект
 git clone https://github.com/Amirjon1122/golang-todoapp.git
-
 Перейти в папку проекта:
 cd golang-todoapp
 
----
 
-## 2. Создать базу данных PostgreSQL
+⸻
 
-Создать базу:
+
+2. Создать базу данных PostgreSQL
+Создать базу данных:
 CREATE DATABASE todo;
-
 Подключиться к базе и выполнить файл:
 \i schema.sql
-
 Файл schema.sql создаст таблицу:
 tasks
 
----
 
-## 3. Настроить подключение к базе
+⸻
 
-Открыть файл:
-database.go
 
-и указать свои данные PostgreSQL:
-postgres://username:password@localhost:5432/todo
+3. Настроить подключение к базе
+Создать файл .env в корне проекта:
+DATABASE_URL=postgres://username:password@localhost:5432/todo
+PORT=8080
+Указать свои данные PostgreSQL.
 
----
 
-## 4. Запустить проект
+⸻
 
-В терминале выполнить:
+
+4. Запустить проект
+Выполнить:
 go run .
-
 Сервер запустится:
 http://localhost:8080
 
----
 
-# API запросы
+⸻
 
-## Получить все задачи
 
+API запросы
+Получить все задачи
 GET:
 http://localhost:8080/tasks
 
----
 
-## Получить задачу по ID
+⸻
 
+
+Получить задачу по ID
 GET:
 http://localhost:8080/tasks?id=1
 
----
 
-## Создать задачу
+⸻
 
+
+Создать задачу
 POST:
 http://localhost:8080/tasks
-
 Body:
 {
     "title": "Изучить Go",
@@ -82,13 +79,13 @@ Body:
     "completed": false
 }
 
----
 
-## Обновить задачу
+⸻
 
+
+Обновить задачу
 PUT:
 http://localhost:8080/tasks?id=1
-
 Body:
 {
     "title": "Изучить PostgreSQL",
@@ -96,16 +93,19 @@ Body:
     "completed": true
 }
 
----
 
-## Удалить задачу
+⸻
 
+
+Удалить задачу
 DELETE:
 http://localhost:8080/tasks?id=1
 
----
 
-# Структура проекта
+⸻
+
+
+Структура проекта
 golang-todoapp
 │
 ├── main.go
@@ -113,5 +113,8 @@ golang-todoapp
 ├── handlers.go
 ├── task.go
 ├── schema.sql
+├── .env.example
+├── .gitignore
 ├── go.mod
-└── go.sum
+├── go.sum
+└── README.md
